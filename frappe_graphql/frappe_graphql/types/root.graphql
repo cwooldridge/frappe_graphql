@@ -7,6 +7,13 @@ schema {
   subscription: Subscription
 }
 
+interface BaseChildDocType {
+  parent: BaseDocType!
+  parent__name: String!
+  parentfield: String!
+  parenttype: String!
+}
+
 interface BaseDocType {
   doctype: String
   name: String
@@ -14,10 +21,6 @@ interface BaseDocType {
   creation: String
   modified: String
   modified_by: User!
-  parent: BaseDocType
-  parent__name: String
-  parentfield: String
-  parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!

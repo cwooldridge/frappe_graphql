@@ -3,7 +3,7 @@ import inflect
 
 import frappe
 from frappe.utils import cint
-from frappe.model import default_fields, display_fieldtypes, table_fields
+from frappe.model import default_fields, display_fieldtypes, table_fields, child_table_fields
 from frappe.model.meta import Meta
 
 
@@ -41,7 +41,7 @@ def get_doctype_sdl(doctype, options):
 
 def get_basic_doctype_sdl(meta: Meta, options: dict, generated_enums=None):
     dt = format_doctype(meta.name)
-    sdl = f"type {dt} implements BaseDocType {{"
+    sdl = f"type {dt} implements BaseDocType" + (" & BaseChildDocType {" if meta.istable else " {")
 
     defined_fieldnames = [] + list(default_fields)
 
@@ -50,14 +50,19 @@ def get_basic_doctype_sdl(meta: Meta, options: dict, generated_enums=None):
             fieldtype = "Int"
         elif field in ("owner", "modified_by"):
             fieldtype = "User!"
-        elif field == "parent":
-            fieldtype = "BaseDocType"
         else:
             fieldtype = "String"
         sdl += f"\n  {field}: {fieldtype}"
     sdl += "\n  owner__name: String!"
     sdl += "\n  modified_by__name: String!"
-    sdl += "\n  parent__name: String"
+
+    if meta.istable:
+        defined_fieldnames = defined_fieldnames + list(child_table_fields)
+        sdl += "\n  parent: BaseDocType!"
+        sdl += "\n  parenttype: String!"
+        sdl += "\n  parentfield: String!"
+        sdl += "\n  parent__name: String!"
+
 
     for field in meta.fields:
         if field.fieldtype in display_fieldtypes:
@@ -195,7 +200,7 @@ def get_graphql_type(meta, docfield, options: dict, generated_enums=None):
     string_fieldtypes = [
         "Small Text", "Long Text", "Code", "Text Editor", "Markdown Editor", "HTML Editor",
         "Date", "Datetime", "Time", "Text", "Data", "Rating", "Read Only",
-        "Attach", "Attach Image", "Signature", "Color", "Barcode", "Geolocation", "Duration"
+        "Attach", "Attach Image", "Signature", "Color", "Barcode", "Geolocation", "Duration", "JSON", "Autocomplete","Icon"
     ]
     int_fieldtypes = ["Int", "Long Int", "Check"]
     float_fieldtypes = ["Currency", "Float", "Percent"]

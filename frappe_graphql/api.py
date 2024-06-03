@@ -62,9 +62,9 @@ def get_query():
     content_type = request.content_type or ""
 
     if request.method == "GET":
-        query = frappe.safe_decode(request.args["query"])
-        variables = frappe.safe_decode(request.args["variables"])
-        operation_name = frappe.safe_decode(request.args["operation_name"])
+        query = frappe.safe_decode(request.args.get("query",""))
+        variables = frappe.safe_decode(request.args.get("variables",""))
+        operation_name = frappe.safe_decode(request.args.get("operation_name",""))
     elif request.method == "POST":
         # raise Exception("Please send in application/json")
         if "application/json" in content_type:
